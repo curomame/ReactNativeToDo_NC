@@ -1,44 +1,65 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Modal } from 'react-native';
 import { theme } from './color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Fontisto } from '@expo/vector-icons'; 
 
 
 const STORAGE_KEY = "@toDos"
-const last = "@working"
 
 export default function App() {
 
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
+  const [checked, setChecked] = useState(true);
 
   useEffect( () => {
-    loadToDos();
-    loadWhat();
+    loadToDos()
+    loadLast()
   }, []);
 
-  const travel = () => {
-    setWorking(false);
+
+
+  const work = async () => {
+    await setWorking(true);
+  }
+
+  const travel = async () => {
+    await setWorking(false);
   }
   
-  const work = () => {
-    setWorking(true);
-  }
+
+  useEffect( () => {
+    
+    saveLast()
+    }, [working])
   
+
+
+const saveLast = async () => {
+  try {
+    await AsyncStorage.setItem('@last', JSON.stringify({working}))
+  }
+    catch (e) { }
+}
+
+
+const loadLast = async () => {
+    
+    try {
+      const L = await AsyncStorage.getItem('@last')
+      const A = JSON.parse(L);
+      const B = Object.values(A)[0]
+      setWorking(B)
+  } 
+  catch (e) {}
+  }
+
+
+
   const onChangeText = (payload) => setText(payload);
-
-useEffect(() => {
-  AsyncStorage.setItem(last,{working})
-}, [working])
-
-  // const saveWhat = async() => {
-  //   await AsyncStorage.setItem(STORAGE_KEY,{working})
-  //   }
-  
-
 
 
   const saveToDos = async (toSave) => {
@@ -50,10 +71,6 @@ useEffect(() => {
     setToDos(JSON.parse(s))
   }
 
-  const loadWhat = async () => {
-    const w = await AsyncStorage.getItem(last)
-    setWorking(w)
-  }
 
   const addTodo = async () => {
     if(text === ""){
@@ -83,6 +100,9 @@ useEffect(() => {
 
     };
 
+  const editToDo = () => {
+
+  }
 
 
   return (
@@ -102,6 +122,8 @@ useEffect(() => {
 
       </View>
     
+
+
         <TextInput
         onSubmitEditing={addTodo}
         onChangeText={onChangeText} 
@@ -115,9 +137,16 @@ useEffect(() => {
       {Object.keys(toDos).map((key) => (
         toDos[key].working === working ? <View style={styles.toDo}key={key}>
           <Text style={styles.toDoText}>{toDos[key].text}</Text>
-          <TouchableOpacity onPress={() => deleteToDo(key)}>
+          
+          <View style={styles.icon}>
+          <TouchableOpacity style={styles.iconst} onPress={() => setChecked(!checked)}>
+            { checked ? <Fontisto name="checkbox-passive" size={18} color={theme.grey} /> : <Fontisto name="checkbox-active" size={18} color={theme.grey} />}
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.iconst} onPress={() => deleteToDo(key)}>
           <Fontisto name="trash" size={18} color={theme.grey} />
           </TouchableOpacity>
+          </View>
 
         </View> : null
         ))}
@@ -167,5 +196,13 @@ const styles = StyleSheet.create({
     fontSize:14,
     fontWeight:"400",
 
+  },
+  icon: {
+    flexDirection:"row",
+    alignItems:"center",
+    justifyContent:"space-between"
+  },
+  iconst:{
+    paddingLeft: 5,
   }
 });
