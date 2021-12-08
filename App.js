@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Switch } from 'react-native';
 import { theme } from './color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Fontisto } from '@expo/vector-icons'; 
@@ -13,7 +13,7 @@ export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
-  const [checked, setChecked] = useState(true);
+  const [complete, setComplete] = useState(true);
 
   useEffect( () => {
     loadToDos()
@@ -78,11 +78,10 @@ const loadLast = async () => {
     } else {
       
     }
-    const newToDos =  {...toDos, [Date.now()]:{text, working}}
+    const newToDos =  {...toDos, [Date.now()]:{text, working, complete}}
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText("");
-    
   }
 
     const deleteToDo = async (key) => {
@@ -100,9 +99,18 @@ const loadLast = async () => {
 
     };
 
-  const editToDo = () => {
+    const checkchange = (key) => {
+      const newToDos = {...toDos}
+      newToDos[key].complete = !(newToDos[key].complete)
+      setToDos(newToDos)
+      console.log(newToDos)
+    }
 
-  }
+    const changeData = (key) => {
+
+    
+
+    }
 
 
   return (
@@ -133,14 +141,25 @@ const loadLast = async () => {
         placeholder={working ? "Add a To Do" : "Where do you want to go?"}  
         style={styles.input}/>
 
+
+
+
+
     <ScrollView>
       {Object.keys(toDos).map((key) => (
-        toDos[key].working === working ? <View style={styles.toDo}key={key}>
-          <Text style={styles.toDoText}>{toDos[key].text}</Text>
+        toDos[key].working === working ? 
+        
+        <View style={styles.toDo} key={key} >
+          <Text style={toDos[key].complete ? styles.toDoText : {...styles.toDoText,textDecorationLine: 'line-through', textDecorationStyle: 'solid', color:theme.grey}}>{toDos[key].text}</Text>
           
           <View style={styles.icon}>
-          <TouchableOpacity style={styles.iconst} onPress={() => setChecked(!checked)}>
-            { checked ? <Fontisto name="checkbox-passive" size={18} color={theme.grey} /> : <Fontisto name="checkbox-active" size={18} color={theme.grey} />}
+          
+          <TouchableOpacity style={styles.iconst} onPress={() => changeData(key)}>
+            <Fontisto name="move-h-a" size={18} color={theme.grey} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.iconst} onPress={() => checkchange(key)}>
+            {toDos[key].complete ? <Fontisto name="checkbox-passive" size={18} color={theme.grey} /> : <Fontisto name="checkbox-active" size={18} color={theme.grey} />}
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.iconst} onPress={() => deleteToDo(key)}>
@@ -148,7 +167,9 @@ const loadLast = async () => {
           </TouchableOpacity>
           </View>
 
-        </View> : null
+        </View>
+        
+        : null
         ))}
     </ScrollView>
 
